@@ -1,0 +1,261 @@
+{
+  "sources": {
+    "hdb": {
+      "release": "HIMDATA 2025-3",
+      "url": "https://www.himalayandatabase.com/downloads/HIMDATA%202025-3.zip"
+    }
+  },
+  "peaks": [
+    {
+      "name": "Everest",
+      "height_m": 8849,
+      "hdb_id": "EVER",
+      "range": "Mahalangur Himal",
+      "countries": [
+        "Nepal",
+        "China"
+      ],
+      "first_ascent_year": 1953,
+      "last_ascent": {
+        "date": "2025-10-15",
+        "season": "Autumn",
+        "expedition_id": "EVER25303",
+        "leaders": "Jim Morrison",
+        "nation": "USA",
+        "sponsor": "American Everest Ski Project 2025",
+        "route": "N Face (Hornbein Couloir)",
+        "host_country": "China",
+        "summiters": 12,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "K2",
+      "height_m": 8611,
+      "hdb_id": null,
+      "range": "Karakoram",
+      "countries": [
+        "Pakistan",
+        "China"
+      ],
+      "first_ascent_year": 1954,
+      "last_ascent": null
+    },
+    {
+      "name": "Kangchenjunga",
+      "height_m": 8586,
+      "hdb_id": "KANG",
+      "range": "Kangchenjunga Himal",
+      "countries": [
+        "Nepal",
+        "India"
+      ],
+      "first_ascent_year": 1955,
+      "last_ascent": {
+        "date": "2025-05-19",
+        "season": "Spring",
+        "expedition_id": "KANG25102",
+        "leaders": "Sarfraz Singh, Gajendra Dueba",
+        "nation": "India",
+        "sponsor": "Indo-Nepal Army Kanchenjunga Expedition 2025",
+        "route": "SW Face",
+        "host_country": "Nepal",
+        "summiters": 27,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "Lhotse",
+      "height_m": 8516,
+      "hdb_id": "LHOT",
+      "range": "Mahalangur Himal",
+      "countries": [
+        "Nepal",
+        "China"
+      ],
+      "first_ascent_year": 1956,
+      "last_ascent": {
+        "date": "2025-05-24",
+        "season": "Spring",
+        "expedition_id": "LHOT25111",
+        "leaders": "Ben Jones",
+        "nation": "USA",
+        "sponsor": "American Alpine Institute (AAI) Lhotse Expedition 2025",
+        "route": "S Col-W Face",
+        "host_country": "Nepal",
+        "summiters": 2,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "Makalu",
+      "height_m": 8485,
+      "hdb_id": "MAKA",
+      "range": "Mahalangur Himal",
+      "countries": [
+        "Nepal",
+        "China"
+      ],
+      "first_ascent_year": 1955,
+      "last_ascent": {
+        "date": "2026-01-15",
+        "season": "Winter",
+        "expedition_id": "MAKA25401",
+        "leaders": "Abolfazl Gozali",
+        "nation": "Iran",
+        "sponsor": "Makalu Adventure Makalu Expedition Winter 2025",
+        "route": "Makalu La-NW Ridge",
+        "host_country": "Nepal",
+        "summiters": 4,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "Cho Oyu",
+      "height_m": 8188,
+      "hdb_id": "CHOY",
+      "range": "Mahalangur Himal",
+      "countries": [
+        "Nepal",
+        "China"
+      ],
+      "first_ascent_year": 1954,
+      "last_ascent": {
+        "date": "2025-10-14",
+        "season": "Autumn",
+        "expedition_id": "CHOY25305",
+        "leaders": "Robert Kelso",
+        "nation": "Ireland",
+        "sponsor": "Adventure Consultants Cho Oyu Expedition 2025",
+        "route": "NW side",
+        "host_country": "China",
+        "summiters": 10,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "Dhaulagiri I",
+      "height_m": 8167,
+      "hdb_id": "DHA1",
+      "range": "Dhaulagiri Himal",
+      "countries": [
+        "Nepal"
+      ],
+      "first_ascent_year": 1960,
+      "last_ascent": {
+        "date": "2025-09-28",
+        "season": "Autumn",
+        "expedition_id": "DHA125303",
+        "leaders": "Arjun Vajpai",
+        "nation": "India",
+        "sponsor": "Seven Summit Treks (SST) Dhaulagiri Expedition 2025",
+        "route": "NE Ridge",
+        "host_country": "Nepal",
+        "summiters": 26,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "Manaslu",
+      "height_m": 8163,
+      "hdb_id": "MANA",
+      "range": "Mansiri Himal",
+      "countries": [
+        "Nepal"
+      ],
+      "first_ascent_year": 1956,
+      "last_ascent": {
+        "date": "2025-09-27",
+        "season": "Autumn",
+        "expedition_id": "MANA25317",
+        "leaders": "Herbert Wolf",
+        "nation": "Austria",
+        "sponsor": "Furtenbach Adventures Manaslu Expedition 2025",
+        "route": "NE Face",
+        "host_country": "Nepal",
+        "summiters": 18,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "Nanga Parbat",
+      "height_m": 8126,
+      "hdb_id": null,
+      "range": "Western Himalaya",
+      "countries": [
+        "Pakistan"
+      ],
+      "first_ascent_year": 1953,
+      "last_ascent": null
+    },
+    {
+      "name": "Annapurna I",
+      "height_m": 8091,
+      "hdb_id": "ANN1",
+      "range": "Annapurna Himal",
+      "countries": [
+        "Nepal"
+      ],
+      "first_ascent_year": 1950,
+      "last_ascent": {
+        "date": "2025-04-07",
+        "season": "Spring",
+        "expedition_id": "ANN125106",
+        "leaders": "Narender Kumar",
+        "nation": "India",
+        "sponsor": "Pioneer Adventure Annapura I Expedition 2025",
+        "route": "N Face",
+        "host_country": "Nepal",
+        "summiters": 8,
+        "source": "hdb"
+      }
+    },
+    {
+      "name": "Gasherbrum I",
+      "height_m": 8080,
+      "hdb_id": null,
+      "range": "Karakoram",
+      "countries": [
+        "Pakistan",
+        "China"
+      ],
+      "first_ascent_year": 1958,
+      "last_ascent": null
+    },
+    {
+      "name": "Broad Peak",
+      "height_m": 8051,
+      "hdb_id": null,
+      "range": "Karakoram",
+      "countries": [
+        "Pakistan",
+        "China"
+      ],
+      "first_ascent_year": 1957,
+      "last_ascent": null
+    },
+    {
+      "name": "Gasherbrum II",
+      "height_m": 8035,
+      "hdb_id": null,
+      "range": "Karakoram",
+      "countries": [
+        "Pakistan",
+        "China"
+      ],
+      "first_ascent_year": 1956,
+      "last_ascent": null
+    },
+    {
+      "name": "Shishapangma",
+      "height_m": 8027,
+      "hdb_id": null,
+      "range": "Jugal Himal",
+      "countries": [
+        "China"
+      ],
+      "first_ascent_year": 1964,
+      "last_ascent": null
+    }
+  ]
+}

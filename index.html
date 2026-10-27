@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Summit Tracker</title>
+  <meta name="description" content="The most recent recorded summit of each of the 14 eight-thousanders.">
+  <meta name="theme-color" content="#09100b">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600;700;800&display=swap">
+  <style>
+    /* Colors follow jedankomad.github.io (dark green theme) */
+    :root {
+      color-scheme: dark;
+      --page-col: #0d1510;
+      --navbar-col: #09100b;
+      --navbar-border-col: #1f3326;
+      --surface-col: #15211a;
+      --surface2-col: #1c2b22;
+      --line-col: #26392d;
+      --text-col: #d4e0d7;
+      --heading-col: #e8f0ea;
+      --muted-col: #8ea597;
+      --faint-col: #6f8a78;
+      --accent-col: #34a865;
+      --link-col: #4fd08a;
+      --gold-col: #d9b44a;
+      --body-font: 'Lora', 'Times New Roman', serif;
+      --header-font: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    ::selection { background: rgba(217, 180, 74, .35); color: #fff; }
+    html { background-color: var(--page-col); scrollbar-color: #2e4636 var(--page-col); }
+    body { margin: 0; background: transparent; color: var(--text-col); font: 17px/1.6 var(--body-font); }
+    /* drifting fog, same as the main site */
+    body::before {
+      content: ""; position: fixed; inset: -25%; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(38% 32% at 22% 28%, rgba(52, 168, 101, .14), transparent 70%),
+        radial-gradient(34% 40% at 78% 68%, rgba(52, 168, 101, .11), transparent 70%),
+        radial-gradient(28% 26% at 62% 22%, rgba(217, 180, 74, .045), transparent 70%),
+        radial-gradient(30% 34% at 30% 82%, rgba(40, 120, 80, .07), transparent 70%);
+      animation: fog-drift 28s ease-in-out infinite alternate;
+    }
+    @keyframes fog-drift {
+      0%   { transform: translate3d(0, 0, 0) scale(1); }
+      50%  { transform: translate3d(8%, -6%, 0) scale(1.1); }
+      100% { transform: translate3d(-7%, 7%, 0) scale(1.04); }
+    }
+
+    h1, h2, h3 { font-family: var(--header-font); color: var(--heading-col); margin: 0; }
+    a { color: var(--link-col); text-decoration: none; }
+    a:hover { color: var(--gold-col); }
+    button { font: inherit; color: inherit; }
+
+    .nav { background: var(--navbar-col); border-bottom: 1px solid var(--navbar-border-col); }
+    .nav-inner { max-width: 1180px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+                 font-family: var(--header-font); font-size: .9rem; letter-spacing: .04em; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--heading-col); font-weight: 800; text-transform: uppercase; }
+    .brand svg { color: var(--gold-col); }
+    .nav a.home { color: #cfe0d4; font-weight: 600; text-transform: uppercase; }
+    .nav a.home:hover { color: var(--gold-col); }
+
+    main { max-width: 1180px; margin: 0 auto; padding: 0 16px 48px; }
+
+    .hero { text-align: center; padding: 56px 0 36px; }
+    .hero h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.01em; }
+    .hero p { margin: 10px auto 0; max-width: 640px; color: var(--muted-col); font-style: italic; font-size: clamp(1.1rem, 2.2vw, 1.35rem); line-height: 1.45; }
+
+    .eyebrow { font-family: var(--header-font); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-col); }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .stat { background: var(--surface-col); border: 1px solid var(--line-col); border-radius: 12px; padding: 16px 18px; }
+    .stat .val { font-family: var(--header-font); font-size: 1.7rem; font-weight: 800; color: var(--heading-col); line-height: 1.2; margin-top: 6px; }
+    .stat .val small { font-size: 1rem; color: var(--muted-col); font-weight: 600; }
+    .stat .note { color: var(--muted-col); font-size: .9rem; margin-top: 2px; }
+    .stat button.peaklink { background: none; border: 0; padding: 0; cursor: pointer; color: var(--heading-col); text-align: left; }
+    .stat button.peaklink:hover { color: var(--gold-col); }
+
+    .card { background: rgba(21, 33, 26, .78); border: 1px solid var(--line-col); border-radius: 14px; padding: 20px; margin-bottom: 22px;
+            backdrop-filter: blur(4px); }
+    .card-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; margin-bottom: 10px; }
+    .card-head h2 { font-size: 1.15rem; font-weight: 700; }
+    .hint { color: var(--muted-col); font-size: .88rem; font-style: italic; }
+    .legend { display: flex; gap: 16px; font-family: var(--header-font); font-size: .8rem; color: var(--muted-col); }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+
+    .explorer { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; }
+    .chart-scroll { overflow-x: auto; position: relative; }
+    .chart-scroll svg { display: block; width: 100%; min-width: 720px; height: auto; }
+
+    /* ridge chart */
+    .axis text { font-family: var(--header-font); font-size: 13px; fill: var(--faint-col); }
+    .axis line { stroke: var(--line-col); stroke-width: 1; }
+    .axis .k8 line { stroke: var(--gold-col); stroke-opacity: .45; stroke-dasharray: 2 4; }
+    .axis .k8 text { fill: var(--gold-col); fill-opacity: .8; }
+    .peak .body { stroke-width: 1.2; stroke-linejoin: round; transition: opacity .35s; }
+    .peak.has-data .body { fill: url(#g-data); stroke: var(--accent-col); }
+    .peak.no-data .body { fill: url(#g-nodata); stroke: #2e4636; stroke-dasharray: 3 3; }
+    .peak .snow { fill: #e8f0ea; opacity: .85; pointer-events: none; transition: opacity .35s; }
+    .peak.no-data .snow { opacity: .35; }
+    .peaks.has-sel .peak:not(.sel) .body { opacity: .55; }
+    .grow .peak { transform-box: fill-box; transform-origin: 50% 100%; animation: grow .9s cubic-bezier(.2, .8, .2, 1) both; }
+    @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .name { font-family: var(--header-font); font-size: 14px; fill: var(--muted-col); cursor: pointer; transition: fill .2s; }
+    .name.sel { fill: var(--gold-col); font-weight: 700; }
+    .name.hover { fill: var(--heading-col); }
+    .diff { font-family: var(--header-font); font-size: 13px; fill: var(--muted-col); text-anchor: middle; opacity: 0; transition: opacity .4s; }
+    .diff.show { opacity: 1; }
+    .diff.self { fill: var(--gold-col); font-weight: 700; font-size: 15px; }
+    #overlay .body { fill: url(#g-sel); stroke: var(--gold-col); stroke-width: 1.5; }
+    #overlay .snow { fill: #fff6dc; }
+    #overlay.pop { animation: pop .55s cubic-bezier(.2, .9, .3, 1.3); }
+    @keyframes pop { from { transform: translateY(14px); opacity: .2; } to { transform: none; opacity: 1; } }
+    #level { transition: transform .6s cubic-bezier(.3, .8, .3, 1); }
+    #level line { stroke: var(--gold-col); stroke-width: 1.2; stroke-dasharray: 6 5; opacity: .75; }
+    #level text { font-family: var(--header-font); font-size: 13px; font-weight: 700; fill: var(--gold-col); text-anchor: end; }
+    #climber circle { fill: var(--gold-col); stroke: var(--page-col); stroke-width: 2; }
+    #flag { opacity: 0; transition: opacity .3s; }
+    #flag.show { opacity: 1; }
+    #flag path { fill: var(--gold-col); }
+    #flag line { stroke: var(--heading-col); stroke-width: 1.3; }
+    .hit { fill: transparent; cursor: pointer; }
+    .hit:focus { outline: none; }
+    .hit:focus-visible { fill: rgba(217, 180, 74, .07); }
+
+    .tip { position: absolute; pointer-events: none; background: var(--navbar-col); border: 1px solid var(--line-col); border-radius: 8px;
+           padding: 8px 11px; font-size: .85rem; line-height: 1.35; box-shadow: 0 6px 20px rgba(0, 0, 0, .45); opacity: 0;
+           transition: opacity .12s; white-space: nowrap; z-index: 5; }
+    .tip.show { opacity: 1; }
+    .tip b { font-family: var(--header-font); color: var(--heading-col); }
+    .tip .m { color: var(--muted-col); }
+
+    /* detail panel */
+    .detail { background: var(--surface-col); border: 1px solid var(--line-col); border-radius: 12px; padding: 18px; align-self: start; }
+    .detail.swap { animation: fade .4s ease; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .d-head { display: flex; justify-content: space-between; gap: 10px; }
+    .d-head h2 { font-size: 1.7rem; font-weight: 800; line-height: 1.15; margin-top: 4px; }
+    .d-sub { color: var(--muted-col); font-size: .92rem; margin-top: 2px; }
+    .d-nav { display: flex; gap: 6px; }
+    .d-nav button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line-col); background: var(--surface2-col);
+                    cursor: pointer; color: var(--muted-col); }
+    .d-nav button:hover { color: var(--gold-col); border-color: var(--gold-col); }
+    .d-height { display: flex; align-items: baseline; gap: 10px; margin: 14px 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line-col); }
+    .d-height .big { font-family: var(--header-font); font-size: 1.5rem; font-weight: 800; color: var(--heading-col); }
+    .d-height .m { color: var(--muted-col); font-size: .9rem; }
+    .d-when { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 4px; }
+    .d-when .date { font-family: var(--header-font); font-size: 1.25rem; font-weight: 700; color: var(--heading-col); }
+    .ago { font-family: var(--header-font); color: var(--link-col); font-weight: 600; font-size: .95rem; }
+    .chip { display: inline-block; font-family: var(--header-font); font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+            text-transform: uppercase; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line-col); color: var(--muted-col); }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 14px 0 0; font-size: .92rem; }
+    dt { font-family: var(--header-font); font-size: .78rem; color: var(--faint-col); text-transform: uppercase; letter-spacing: .05em; padding-top: 2px; }
+    dd { margin: 0; color: var(--text-col); }
+    .empty { color: var(--muted-col); font-style: italic; margin: 8px 0 0; }
+
+    /* timeline */
+    .tl svg { display: block; width: 100%; min-width: 720px; height: auto; }
+    .band { fill: rgba(52, 168, 101, .05); }
+    .band.alt { fill: rgba(52, 168, 101, .1); }
+    .band-label { font-family: var(--header-font); font-size: 11px; fill: var(--faint-col); text-transform: uppercase; letter-spacing: .08em; }
+    .tl .axis-line { stroke: var(--line-col); stroke-width: 1.5; }
+    .tl .tick { font-family: var(--header-font); font-size: 11px; fill: var(--muted-col); text-anchor: middle; }
+    .tl .stem { stroke: var(--line-col); stroke-width: 1; }
+    .tl .dot circle { fill: var(--accent-col); stroke: var(--page-col); stroke-width: 2.5; transition: r .2s, fill .2s; }
+    .tl .dot text { font-family: var(--header-font); font-size: 12px; fill: var(--text-col); paint-order: stroke; stroke: #15211a; stroke-width: 5px; stroke-linejoin: round; }
+    .tl .dot text tspan.d { fill: var(--muted-col); }
+    .tl .dot { cursor: pointer; }
+    .tl .dot:hover circle { r: 8; }
+    .tl .dot.sel circle { fill: var(--gold-col); r: 8; }
+    .tl .dot.sel text { fill: var(--gold-col); font-weight: 700; }
+    .tl .stem.sel { stroke: var(--gold-col); }
+
+    /* table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+    th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line-col); vertical-align: top; }
+    th { font-family: var(--header-font); font-size: .74rem; letter-spacing: .07em; text-transform: uppercase; color: var(--faint-col); white-space: nowrap; }
+    th button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; }
+    th button:hover, th button.on { color: var(--gold-col); }
+    td.num, th.num { text-align: right; font-family: var(--header-font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    td.date { font-family: var(--header-font); white-space: nowrap; }
+    td .m { color: var(--muted-col); font-size: .85em; }
+    tbody tr { cursor: pointer; transition: background-color .15s; }
+    tbody tr:hover { background: var(--surface2-col); }
+    tbody tr.sel { background: var(--surface2-col); box-shadow: inset 3px 0 0 var(--gold-col); }
+    tbody tr.sel td:first-child { color: var(--gold-col); }
+    td.peakname { font-family: var(--header-font); font-weight: 700; color: var(--heading-col); white-space: nowrap; }
+    .na { color: var(--faint-col); font-style: italic; }
+
+    footer { border-top: 1px solid var(--navbar-border-col); background: var(--navbar-col); color: #8ea597; font-size: .88rem; }
+    footer .inner { max-width: 1180px; margin: 0 auto; padding: 22px 16px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+    footer a { color: #cfe0d4; }
+    footer a:hover { color: var(--gold-col); }
+
+    @media (max-width: 960px) {
+      .explorer { grid-template-columns: minmax(0, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .stats { grid-template-columns: 1fr; }
+      .card { padding: 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body::before { animation: none; }
+      .grow .peak, #overlay.pop, .detail.swap { animation: none; }
+      #level { transition: none; }
+    }
+  </style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M2 20 9 7l4 6 3-4 6 11z"/></svg>
+      Summit Tracker
+    </span>
+    <a class="home" href="https://jedankomad.github.io/">Jedankomad</a>
+  </div>
+</nav>
+
+<main>
+  <header class="hero">
+    <h1>Fourteen giants</h1>
+    <p>When did someone last stand on top of each of the world's eight-thousand-metre peaks?</p>
+  </header>
+
+  <section class="stats" id="stats" aria-label="Summary"></section>
+
+  <section class="card" aria-labelledby="ridge-title">
+    <div class="card-head">
+      <h2 id="ridge-title">The skyline</h2>
+      <div class="legend">
+        <span><i style="background: linear-gradient(#2f6b45, #142a1c); border: 1px solid #34a865"></i>Summit on record</span>
+        <span><i style="background: #15211a; border: 1px dashed #4a6553"></i>No data yet</span>
+      </div>
+    </div>
+    <p class="hint" style="margin: -4px 0 10px">Pick a peak to see how it measures up against the rest. Arrow keys browse. Height axis starts at 6,000 m.</p>
+    <div class="explorer">
+      <div class="chart-scroll" id="ridge-wrap">
+        <svg id="ridge" viewBox="0 0 1000 540" role="img" aria-label="Heights of the 14 eight-thousanders"></svg>
+        <div class="tip" id="tip"></div>
+      </div>
+      <aside class="detail" id="detail" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="tl-title">
+    <div class="card-head">
+      <h2 id="tl-title">Latest summits on a timeline</h2>
+      <span class="hint">Most 8000 m summits happen in two short windows, before and after the monsoon.</span>
+    </div>
+    <div class="chart-scroll tl"><svg id="timeline" viewBox="0 0 1000 200" role="img" aria-label="Timeline of latest summits"></svg></div>
+  </section>
+
+  <section class="card" aria-labelledby="table-title">
+    <div class="card-head"><h2 id="table-title">All peaks</h2><span class="hint">Click a column to sort, a row to select.</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="rows"><tr><td colspan="7" class="na">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="inner">
+    <span id="source">Source: The Himalayan Database</span>
+    <span>Pavle Saponjic · <a href="https://jedankomad.github.io/">jedankomad.github.io</a></span>
+  </div>
+</footer>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const fmt = n => n.toLocaleString("en");
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const DAY = 86400000;
+const TODAY = Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+const parseDate = s => Date.parse(s + "T00:00:00Z");
+const daysSince = s => Math.round((TODAY - parseDate(s)) / DAY);
+const fmtDate = (s, opts = {day: "numeric", month: "short", year: "numeric"}) =>
+  new Date(parseDate(s)).toLocaleDateString("en-GB", {...opts, timeZone: "UTC"});
+
+function svg(tag, attrs = {}, parent) {
+  const node = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+let peaks = [];
+let sel = -1;
+
+// ---------- ridge chart ----------
+const R = {X0: 70, X1: 990, TOP: 34, G: 440, MIN: 6000, MAX: 9000};
+const ry = m => R.G - (m - R.MIN) / (R.MAX - R.MIN) * (R.G - R.TOP);
+const step = (R.X1 - R.X0) / 14;
+const cx = i => R.X0 + step * (i + .5);
+const rnd = i => { const x = Math.sin(i * 12.9898 + 4.1) * 43758.5453; return x - Math.floor(x); };
+
+// Outline of one mountain: base → left shoulder → summit → right shoulder → base
+function shape(i) {
+  const x = cx(i), top = ry(peaks[i].height_m), hb = step * 1.75, h = R.G - top;
+  const ls = [x - hb * (.38 + rnd(i) * .2), top + h * (.32 + rnd(i + 20) * .2)];
+  const rs = [x + hb * (.36 + rnd(i + 40) * .2), top + h * (.3 + rnd(i + 60) * .2)];
+  return {x, top, pts: [[x - hb, R.G], ls, [x, top], rs, [x + hb, R.G]]};
+}
+const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+const toPath = pts => "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L") + "Z";
+function snowPath(s) {
+  const [, ls, top, rs] = s.pts, a = lerp(top, ls, .3), b = lerp(top, rs, .26);
+  const mid1 = [top[0] - (top[0] - a[0]) * .35, a[1] + 4], mid2 = [top[0] + (b[0] - top[0]) * .3, b[1] - 3];
+  return toPath([a, top, b, mid2, [top[0] + 1, (a[1] + b[1]) / 2 - 2], mid1]);
+}
+
+function buildRidge() {
+  const root = $("#ridge");
+  root.innerHTML = `
+    <defs>
+      <linearGradient id="g-data" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f6b45"/><stop offset="1" stop-color="#10201a"/></linearGradient>
+      <linearGradient id="g-nodata" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2b22"/><stop offset="1" stop-color="#0f1813"/></linearGradient>
+      <linearGradient id="g-sel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b44a"/><stop offset=".55" stop-color="#7a6626"/><stop offset="1" stop-color="#1d1f12"/></linearGradient>
+    </defs>`;
+  const axis = svg("g", {class: "axis"}, root);
+  for (let m = 6000; m <= 9000; m += 500) {
+    const g = svg("g", {class: m === 8000 ? "k8" : ""}, axis);
+    if (m % 1000 === 0 || m === 8000) {
+      svg("line", {x1: R.X0 - 6, x2: R.X1, y1: ry(m), y2: ry(m), "stroke-opacity": m === 8000 ? 1 : .6}, g);
+      svg("text", {x: R.X0 - 10, y: ry(m) + 4, "text-anchor": "end"}, g).textContent = fmt(m);
+    }
+  }
+
+  const group = svg("g", {class: "peaks grow"}, root);
+  // lowest first, so taller (left) peaks overlap their lower neighbours
+  for (let i = peaks.length - 1; i >= 0; i--) {
+    const s = shape(i), p = peaks[i];
+    const g = svg("g", {class: "peak " + (p.last_ascent ? "has-data" : "no-data"), "data-i": i, style: `animation-delay:${i * 45}ms`}, group);
+    svg("path", {class: "body", d: toPath(s.pts)}, g);
+    svg("path", {class: "snow", d: snowPath(s)}, g);
+  }
+  svg("line", {x1: R.X0 - 6, x2: R.X1, y1: R.G, y2: R.G, stroke: "#2e4636", "stroke-width": 1.5}, root);
+
+  const level = svg("g", {id: "level", style: `transform: translateY(${R.G}px)`}, root);
+  svg("line", {x1: R.X0, x2: R.X1, y1: 0, y2: 0}, level);
+  svg("text", {x: R.X1, y: -6}, level);
+
+  const overlay = svg("g", {id: "overlay"}, root);
+  svg("path", {class: "body"}, overlay);
+  svg("path", {class: "snow"}, overlay);
+  const flag = svg("g", {id: "flag"}, root);
+  svg("line", {x1: 0, y1: 0, x2: 0, y2: -24}, flag);
+  svg("path", {d: "M0 -24 L15 -19 L0 -14Z"}, flag);
+  const climber = svg("g", {id: "climber", opacity: 0}, root);
+  svg("circle", {r: 5.5}, climber);
+
+  const diffs = svg("g", {}, root);
+  peaks.forEach((p, i) => svg("text", {class: "diff", x: cx(i), y: ry(p.height_m) - 12, "data-i": i}, diffs));
+
+  const names = svg("g", {}, root);
+  peaks.forEach((p, i) => {
+    const t = svg("text", {class: "name", "data-i": i, x: cx(i) + 4, y: R.G + 20, "text-anchor": "end",
+      transform: `rotate(-35 ${cx(i) + 4} ${R.G + 20})`}, names);
+    t.textContent = p.name;
+  });
+
+  const hits = svg("g", {}, root);
+  peaks.forEach((p, i) => {
+    const r = svg("rect", {class: "hit", x: cx(i) - step / 2, y: 0, width: step, height: 540, "data-i": i, tabindex: -1,
+      "aria-label": `${p.name}, ${fmt(p.height_m)} m`}, hits);
+    r.addEventListener("click", () => select(i));
+    r.addEventListener("mousemove", e => showTip(i, e));
+    r.addEventListener("mouseleave", hideTip);
+  });
+
+  setTimeout(() => group.classList.remove("grow"), 1600);
+}
+
+function showTip(i, e) {
+  const p = peaks[i], a = p.last_ascent, tip = $("#tip"), wrap = $("#ridge-wrap");
+  tip.innerHTML = `<b>${esc(p.name)}</b> <span class="m">${fmt(p.height_m)} m</span><br>` +
+    (a ? `Last summit ${fmtDate(a.date)} <span class="m">· ${fmt(daysSince(a.date))} days ago</span>` : `<span class="m">No data yet</span>`);
+  const box = wrap.getBoundingClientRect();
+  let x = e.clientX - box.left + wrap.scrollLeft + 14, y = e.clientY - box.top + 14;
+  if (x + tip.offsetWidth > wrap.scrollLeft + box.width) x -= tip.offsetWidth + 28;
+  tip.style.left = x + "px";
+  tip.style.top = y + "px";
+  tip.classList.add("show");
+  document.querySelectorAll(".name").forEach(n => n.classList.toggle("hover", +n.dataset.i === i));
+}
+function hideTip() {
+  $("#tip").classList.remove("show");
+  document.querySelectorAll(".name.hover").forEach(n => n.classList.remove("hover"));
+}
+
+let climbAnim = 0;
+function updateRidge() {
+  const p = peaks[sel], s = shape(sel);
+  $(".peaks").classList.add("has-sel");
+  document.querySelectorAll(".peak").forEach(g => g.classList.toggle("sel", +g.dataset.i === sel));
+  document.querySelectorAll(".name").forEach(n => n.classList.toggle("sel", +n.dataset.i === sel));
+
+  const overlay = $("#overlay");
+  overlay.querySelector(".body").setAttribute("d", toPath(s.pts));
+  overlay.querySelector(".snow").setAttribute("d", snowPath(s));
+  overlay.classList.remove("pop"); void overlay.getBBox(); overlay.classList.add("pop");
+
+  const level = $("#level");
+  level.style.transform = `translateY(${s.top}px)`;
+  level.querySelector("text").textContent = `${p.name} · ${fmt(p.height_m)} m`;
+
+  document.querySelectorAll(".diff").forEach(t => {
+    const i = +t.dataset.i, d = peaks[i].height_m - p.height_m;
+    t.classList.toggle("self", i === sel);
+    t.textContent = i === sel ? `${fmt(p.height_m)} m` : (d > 0 ? "+" : "−") + fmt(Math.abs(d));
+    t.classList.remove("show");
+    setTimeout(() => t.classList.add("show"), reduceMotion ? 0 : 120 + Math.abs(i - sel) * 40);
+  });
+
+  // a climber walks up the left slope; plants a flag if there is a recorded summit
+  const flag = $("#flag"), climber = $("#climber");
+  flag.classList.remove("show");
+  flag.setAttribute("transform", `translate(${s.x} ${s.top})`);
+  cancelAnimationFrame(climbAnim);
+  const path = [s.pts[0], s.pts[1], s.pts[2]];
+  const segs = [Math.hypot(path[1][0] - path[0][0], path[1][1] - path[0][1]), Math.hypot(path[2][0] - path[1][0], path[2][1] - path[1][1])];
+  const total = segs[0] + segs[1];
+  const finish = () => { climber.setAttribute("opacity", 0); if (p.last_ascent) flag.classList.add("show"); };
+  if (reduceMotion) return finish();
+  const t0 = performance.now(), dur = 1300;
+  climber.setAttribute("opacity", 1);
+  const tick = now => {
+    const t = Math.min(1, Math.max(0, (now - t0) / dur)), e = 1 - Math.pow(1 - t, 2), d = e * total;
+    const pt = d < segs[0] ? lerp(path[0], path[1], d / segs[0]) : lerp(path[1], path[2], (d - segs[0]) / segs[1]);
+    climber.setAttribute("transform", `translate(${pt[0]} ${pt[1] - 3})`);
+    if (t < 1) climbAnim = requestAnimationFrame(tick); else finish();
+  };
+  climbAnim = requestAnimationFrame(tick);
+}
+
+// ---------- detail panel ----------
+function countUp(node, to) {
+  if (reduceMotion) { node.textContent = fmt(to); return; }
+  const t0 = performance.now(), dur = 700;
+  const tick = now => {
+    const t = Math.min(1, Math.max(0, (now - t0) / dur));
+    node.textContent = fmt(Math.round(to * (1 - Math.pow(1 - t, 3))));
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function updateDetail() {
+  const p = peaks[sel], a = p.last_ascent, d = $("#detail");
+  const firstAgo = new Date().getFullYear() - p.first_ascent_year;
+  let html = `
+    <div class="d-head">
+      <div>
+        <div class="eyebrow">#${sel + 1} of 14 · ${esc(p.range)}</div>
+        <h2>${esc(p.name)}</h2>
+        <div class="d-sub">${p.countries.map(esc).join(" / ")} · first climbed ${p.first_ascent_year}</div>
+      </div>
+      <div class="d-nav">
+        <button type="button" data-step="-1" aria-label="Previous peak">←</button>
+        <button type="button" data-step="1" aria-label="Next peak">→</button>
+      </div>
+    </div>
+    <div class="d-height"><span class="big">${fmt(p.height_m)} m</span>
+      <span class="m">${sel === 0 ? "the highest point on Earth" : fmt(peaks[0].height_m - p.height_m) + " m below Everest"}</span></div>`;
+  if (a) {
+    html += `
+      <div class="eyebrow">Last recorded summit</div>
+      <div class="d-when"><span class="date">${fmtDate(a.date)}</span><span class="ago"><span id="ago">0</span> days ago</span></div>
+      ${a.season ? `<span class="chip">${esc(a.season)}</span>` : ""}
+      <dl>
+        <dt>Team</dt><dd>${esc(a.sponsor || "—")}</dd>
+        <dt>Leader</dt><dd>${esc(a.leaders || "—")}${a.nation ? ` <span style="color:var(--muted-col)">(${esc(a.nation)})</span>` : ""}</dd>
+        <dt>Route</dt><dd>${esc(a.route || "—")}${a.host_country ? ` <span style="color:var(--muted-col)">· from ${esc(a.host_country)}</span>` : ""}</dd>
+        <dt>Summiters</dt><dd>${a.summiters} <span style="color:var(--muted-col)">incl. guides</span></dd>
+        <dt>HDB ID</dt><dd>${esc(a.expedition_id)}</dd>
+      </dl>`;
+  } else {
+    html += `
+      <div class="eyebrow">Last recorded summit</div>
+      <p class="empty">${p.countries.includes("Nepal") ? "No recorded summit in the Himalayan Database."
+        : `Not covered yet. The Himalayan Database only tracks Nepal and its border peaks; a source for ${p.range === "Karakoram" || p.name === "Nanga Parbat" ? "Pakistan" : "Tibet"} is planned.`}</p>
+      <p class="empty" style="margin-top:10px">First climbed ${firstAgo} years ago, in ${p.first_ascent_year}.</p>`;
+  }
+  d.innerHTML = html;
+  d.classList.remove("swap"); void d.offsetWidth; d.classList.add("swap");
+  if (a) countUp($("#ago"), daysSince(a.date));
+  d.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => select((sel + +b.dataset.step + 14) % 14)));
+}
+
+// ---------- stats ----------
+function buildStats() {
+  const withData = peaks.filter(p => p.last_ascent);
+  const byDate = [...withData].sort((a, b) => a.last_ascent.date.localeCompare(b.last_ascent.date));
+  const newest = byDate[byDate.length - 1], oldest = byDate[0];
+  const link = p => `<button class="peaklink" data-name="${esc(p.name)}">${esc(p.name)}</button>`;
+  $("#stats").innerHTML = `
+    <div class="stat"><div class="eyebrow">Peaks tracked</div><div class="val">${withData.length} <small>/ 14</small></div>
+      <div class="note">Nepal and its border peaks</div></div>
+    <div class="stat"><div class="eyebrow">Freshest summit</div><div class="val">${link(newest)}</div>
+      <div class="note">${fmtDate(newest.last_ascent.date)} · ${fmt(daysSince(newest.last_ascent.date))} days ago</div></div>
+    <div class="stat"><div class="eyebrow">Longest wait</div><div class="val">${link(oldest)}</div>
+      <div class="note">${fmt(daysSince(oldest.last_ascent.date))} days since the last summit</div></div>
+    <div class="stat"><div class="eyebrow">Data release</div><div class="val" style="font-size:1.25rem">${esc(window.SOURCE.release)}</div>
+      <div class="note">Updated twice a year, so recent seasons lag</div></div>`;
+  document.querySelectorAll(".peaklink").forEach(b => b.addEventListener("click", () => {
+    select(peaks.findIndex(p => p.name === b.dataset.name));
+    $("#ridge").scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block: "center"});
+  }));
+}
+
+// ---------- timeline ----------
+function buildTimeline() {
+  const root = $("#timeline");
+  const items = peaks.map((p, i) => ({p, i})).filter(o => o.p.last_ascent)
+    .sort((a, b) => a.p.last_ascent.date.localeCompare(b.p.last_ascent.date));
+  if (!items.length) return;
+  const first = new Date(parseDate(items[0].p.last_ascent.date)), last = new Date(parseDate(items[items.length - 1].p.last_ascent.date));
+  const start = Date.UTC(first.getUTCFullYear(), first.getUTCMonth() - 1, 1);
+  const end = Date.UTC(last.getUTCFullYear(), last.getUTCMonth() + 2, 1);
+  const X0 = 20, X1 = 980, AX = 150;
+  const tx = t => X0 + (t - start) / (end - start) * (X1 - X0);
+
+  const seasonOf = m => [3, 4, 5].includes(m) ? "Spring" : [6, 7, 8].includes(m) ? "Monsoon" : [9, 10, 11].includes(m) ? "Autumn" : "Winter";
+  let bandStart = start, alt = false;
+  for (let t = start; t < end;) {
+    const d = new Date(t), next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+    const nextSeason = next < end ? seasonOf(new Date(next).getUTCMonth() + 1) : null;
+    if (nextSeason !== seasonOf(d.getUTCMonth() + 1)) {
+      const x0 = tx(bandStart), x1 = tx(Math.min(next, end));
+      svg("rect", {class: "band" + (alt ? " alt" : ""), x: x0, y: 16, width: x1 - x0, height: AX - 16}, root);
+      if (x1 - x0 > 50) svg("text", {class: "band-label", x: x0 + 8, y: 192}, root).textContent = seasonOf(d.getUTCMonth() + 1);
+      bandStart = next; alt = !alt;
+    }
+    t = next;
+  }
+  svg("line", {class: "axis-line", x1: X0, x2: X1, y1: AX, y2: AX}, root);
+  for (let t = start; t < end;) {
+    const d = new Date(t), next = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+    const label = d.toLocaleDateString("en-GB", {month: "short", timeZone: "UTC"}) + (d.getUTCMonth() === 0 ? " " + d.getUTCFullYear() : "");
+    svg("text", {class: "tick", x: tx(t + (next - t) / 2), y: AX + 18}, root).textContent = label;
+    t = next;
+  }
+
+  // a label goes one lane above the highest label its stem would cross
+  const lanes = [];
+  const stems = svg("g", {}, root), labels = svg("g", {}, root), dots = svg("g", {}, root);
+  items.forEach(({p, i}) => {
+    const x = tx(parseDate(p.last_ascent.date));
+    const short = fmtDate(p.last_ascent.date, {day: "numeric", month: "short"});
+    const w = (p.name.length + short.length + 1) * 6.6 + 8;
+    let lane = 0;
+    lanes.forEach((end, j) => { if (end >= x - 4) lane = j + 1; });
+    lanes[lane] = x + w;
+    const ly = AX - 26 - lane * 26;
+    svg("line", {class: "stem", "data-i": i, x1: x, x2: x, y1: AX, y2: ly + 4}, stems);
+    const label = svg("g", {class: "dot", "data-i": i}, labels);
+    svg("text", {x: x + 4, y: ly}, label).innerHTML = `${esc(p.name)} <tspan class="d">${esc(short)}</tspan>`;
+    const dot = svg("g", {class: "dot", "data-i": i, tabindex: 0, role: "button", "aria-label": `${p.name}, ${fmtDate(p.last_ascent.date)}`}, dots);
+    svg("circle", {cx: x, cy: AX, r: 6}, dot);
+    for (const g of [label, dot]) g.addEventListener("click", () => select(i));
+    dot.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(i); } });
+  });
+}
+const updateTimeline = () => document.querySelectorAll(".tl [data-i]").forEach(g => g.classList.toggle("sel", +g.dataset.i === sel));
+
+// ---------- table ----------
+const COLS = [
+  {key: "name", label: "Peak", get: p => p.name},
+  {key: "height", label: "Height", num: true, get: p => p.height_m},
+  {key: "date", label: "Last summit", get: p => p.last_ascent?.date ?? ""},
+  {key: "days", label: "Days since", num: true, get: p => p.last_ascent ? daysSince(p.last_ascent.date) : Infinity},
+  {key: "route", label: "Route", get: p => p.last_ascent?.route ?? "~"},
+  {key: "team", label: "Team", get: p => p.last_ascent?.sponsor ?? "~"},
+  {key: "summiters", label: "Summiters", num: true, get: p => p.last_ascent?.summiters ?? -1},
+];
+let sortKey = "height", sortDir = -1;
+
+function buildTable() {
+  $("#thead").innerHTML = COLS.map(c =>
+    `<th class="${c.num ? "num" : ""}" aria-sort="${c.key === sortKey ? (sortDir > 0 ? "ascending" : "descending") : "none"}">
+      <button type="button" data-key="${c.key}" class="${c.key === sortKey ? "on" : ""}">${c.label}${c.key === sortKey ? (sortDir > 0 ? " ↑" : " ↓") : ""}</button></th>`).join("");
+  $("#thead").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    if (sortKey === b.dataset.key) sortDir = -sortDir;
+    else { sortKey = b.dataset.key; sortDir = ["name", "route", "team"].includes(sortKey) ? 1 : -1; }
+    buildTable();
+  }));
+  const col = COLS.find(c => c.key === sortKey);
+  const order = peaks.map((p, i) => i).sort((a, b) => {
+    const va = col.get(peaks[a]), vb = col.get(peaks[b]);
+    return (typeof va === "number" ? va - vb : String(va).localeCompare(String(vb))) * sortDir;
+  });
+  $("#rows").innerHTML = order.map(i => {
+    const p = peaks[i], a = p.last_ascent;
+    const tail = a ? `
+      <td class="date">${fmtDate(a.date)}<div class="m">${esc(a.season || "")}</div></td>
+      <td class="num">${fmt(daysSince(a.date))}</td>
+      <td>${esc(a.route || "—")}<div class="m">from ${esc(a.host_country || "?")}</div></td>
+      <td>${esc(a.sponsor || "—")}<div class="m">${esc(a.leaders || "")}</div></td>
+      <td class="num">${a.summiters}</td>`
+      : `<td colspan="5" class="na">No data yet${p.hdb_id ? "" : " · outside the Himalayan Database"}</td>`;
+    return `<tr data-i="${i}" class="${i === sel ? "sel" : ""}"><td class="peakname">${esc(p.name)}</td><td class="num">${fmt(p.height_m)} m</td>${tail}</tr>`;
+  }).join("");
+  $("#rows").querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => {
+    select(+tr.dataset.i);
+    $("#ridge").scrollIntoView({behavior: reduceMotion ? "auto" : "smooth", block: "center"});
+  }));
+}
+const updateTable = () => $("#rows").querySelectorAll("tr").forEach(tr => tr.classList.toggle("sel", +tr.dataset.i === sel));
+
+// ---------- selection ----------
+function select(i, updateHash = true) {
+  if (i < 0 || i === sel) return;
+  sel = i;
+  updateRidge();
+  updateDetail();
+  updateTimeline();
+  updateTable();
+  if (updateHash) history.replaceState(null, "", "#" + slug(peaks[i].name));
+}
+
+document.addEventListener("keydown", e => {
+  if (!peaks.length || e.target.closest("input, textarea") || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.key === "ArrowRight") select((sel + 1) % 14);
+  else if (e.key === "ArrowLeft") select((sel + 13) % 14);
+});
+
+fetch("data/summits.json")
+  .then(r => r.json())
+  .then(data => {
+    peaks = data.peaks;
+    window.SOURCE = data.sources.hdb;
+    $("#source").innerHTML = `Source: <a href="https://www.himalayandatabase.com/">The Himalayan Database</a>, release ${esc(data.sources.hdb.release)}`;
+    buildStats();
+    buildRidge();
+    buildTimeline();
+    buildTable();
+    const fromHash = peaks.findIndex(p => slug(p.name) === location.hash.slice(1));
+    setTimeout(() => select(fromHash >= 0 ? fromHash : 0, fromHash >= 0), reduceMotion ? 0 : 900);
+  })
+  .catch(err => {
+    $("#rows").innerHTML = `<tr><td colspan="7" class="na">Failed to load data: ${esc(err)}</td></tr>`;
+  });
+</script>
+</body>
+</html>
