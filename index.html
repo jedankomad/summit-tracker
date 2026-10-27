@@ -6,6 +6,14 @@
   <title>Summit Tracker</title>
   <meta name="description" content="The most recent recorded summit of each of the 14 eight-thousanders.">
   <meta name="theme-color" content="#09100b">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Summit Tracker · Fourteen giants">
+  <meta property="og:description" content="When did someone last stand on top of each of the world's eight-thousand-metre peaks?">
+  <meta property="og:url" content="https://jedankomad.github.io/summit-tracker/">
+  <meta property="og:image" content="https://jedankomad.github.io/summit-tracker/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="icon-192.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -119,7 +127,8 @@
     @keyframes pop { from { transform: translateY(14px); opacity: .2; } to { transform: none; opacity: 1; } }
     #level { transition: transform .6s cubic-bezier(.3, .8, .3, 1); }
     #level line { stroke: var(--gold-col); stroke-width: 1.2; stroke-dasharray: 6 5; opacity: .75; }
-    #level text { font-family: var(--header-font); font-size: 13px; font-weight: 700; fill: var(--gold-col); text-anchor: end; }
+    #level text { font-family: var(--header-font); font-size: 13px; font-weight: 700; fill: var(--gold-col);
+                  paint-order: stroke; stroke: #15211a; stroke-width: 4px; stroke-linejoin: round; }
     #climber circle { fill: var(--gold-col); stroke: var(--page-col); stroke-width: 2; }
     #flag { opacity: 0; transition: opacity .3s; }
     #flag.show { opacity: 1; }
@@ -159,6 +168,30 @@
     dt { font-family: var(--header-font); font-size: .78rem; color: var(--faint-col); text-transform: uppercase; letter-spacing: .05em; padding-top: 2px; }
     dd { margin: 0; color: var(--text-col); }
     .empty { color: var(--muted-col); font-style: italic; margin: 8px 0 0; }
+    .d-section { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line-col); }
+    .d-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+    .d-stat { background: var(--surface2-col); border-radius: 8px; padding: 9px 10px; }
+    .d-stat .v { font-family: var(--header-font); font-size: 1.15rem; font-weight: 800; color: var(--heading-col); line-height: 1.2; }
+    .d-stat .l { font-family: var(--header-font); font-size: .7rem; color: var(--muted-col); line-height: 1.3; margin-top: 2px; }
+    .d-stat .r { font-family: var(--header-font); font-size: .68rem; color: var(--faint-col); margin-top: 3px; }
+    .d-season { margin: 6px 0 0; font-size: .92rem; }
+    .d-season b { font-family: var(--header-font); color: var(--heading-col); }
+
+    /* history chart */
+    .history { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-col); }
+    .history-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; margin-bottom: 6px; }
+    #history-wrap svg { min-width: 600px; }
+    .h-bar { fill: var(--accent-col); }
+    .h-death { fill: #d98a7a; }
+    .h-grow .h-bar, .h-grow .h-death { transform-box: fill-box; animation: grow .6s cubic-bezier(.2, .8, .2, 1) both; }
+    .h-grow .h-bar { transform-origin: 50% 100%; }
+    .h-grow .h-death { transform-origin: 50% 0; }
+    .h-axis { stroke: #2e4636; stroke-width: 1; }
+    .h-grid { stroke: var(--line-col); stroke-dasharray: 2 4; }
+    .h-label { font-family: var(--header-font); font-size: 12px; fill: var(--faint-col); }
+    .h-series { font-family: var(--header-font); font-size: 12px; font-weight: 700; }
+    .h-hit { fill: transparent; }
+    .h-hit:hover { fill: rgba(217, 180, 74, .1); }
 
     /* timeline */
     .tl svg { display: block; width: 100%; min-width: 720px; height: auto; }
@@ -243,9 +276,18 @@
     </div>
     <p class="hint" style="margin: -4px 0 10px">Pick a peak to see how it measures up against the rest. Arrow keys browse. Height axis starts at 6,000 m.</p>
     <div class="explorer">
-      <div class="chart-scroll" id="ridge-wrap">
-        <svg id="ridge" viewBox="0 0 1000 540" role="img" aria-label="Heights of the 14 eight-thousanders"></svg>
-        <div class="tip" id="tip"></div>
+      <div>
+        <div class="chart-scroll" id="ridge-wrap">
+          <svg id="ridge" viewBox="0 0 1000 540" role="img" aria-label="Heights of the 14 eight-thousanders"></svg>
+          <div class="tip" id="tip"></div>
+        </div>
+        <div class="history">
+          <div class="history-head"><span class="eyebrow" id="history-title">Summits per year</span><span class="hint" id="history-note"></span></div>
+          <div class="chart-scroll" id="history-wrap">
+            <svg id="history" viewBox="0 0 1000 236" role="img" aria-label="Summits and deaths per year"></svg>
+            <div class="tip" id="htip"></div>
+          </div>
+        </div>
       </div>
       <aside class="detail" id="detail" aria-live="polite"></aside>
     </div>
@@ -416,11 +458,16 @@ function updateRidge() {
 
   const level = $("#level");
   level.style.transform = `translateY(${s.top}px)`;
-  level.querySelector("text").textContent = `${p.name} · ${fmt(p.height_m)} m`;
+  // label on the side where the neighbouring peaks are taller, so it doesn't hit their diff labels
+  const levelText = level.querySelector("text"), onLeft = sel >= 7;
+  levelText.textContent = `${p.name} · ${fmt(p.height_m)} m`;
+  levelText.setAttribute("x", onLeft ? R.X0 + 4 : R.X1);
+  levelText.setAttribute("text-anchor", onLeft ? "start" : "end");
 
   document.querySelectorAll(".diff").forEach(t => {
     const i = +t.dataset.i, d = peaks[i].height_m - p.height_m;
     t.classList.toggle("self", i === sel);
+    t.setAttribute("y", ry(peaks[i].height_m) - (i === sel ? 32 : 12));  // the selected label clears the flag
     t.textContent = i === sel ? `${fmt(p.height_m)} m` : (d > 0 ? "+" : "−") + fmt(Math.abs(d));
     t.classList.remove("show");
     setTimeout(() => t.classList.add("show"), reduceMotion ? 0 : 120 + Math.abs(i - sel) * 40);
@@ -488,6 +535,7 @@ function updateDetail() {
         <dt>Summiters</dt><dd>${a.summiters} <span style="color:var(--muted-col)">incl. guides</span></dd>
         <dt>HDB ID</dt><dd>${esc(a.expedition_id)}</dd>
       </dl>`;
+    html += statsHtml(p);
   } else {
     html += `
       <div class="eyebrow">Last recorded summit</div>
@@ -499,6 +547,104 @@ function updateDetail() {
   d.classList.remove("swap"); void d.offsetWidth; d.classList.add("swap");
   if (a) countUp($("#ago"), daysSince(a.date));
   d.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => select((sel + +b.dataset.step + 14) % 14)));
+}
+
+// all-time numbers, each ranked among the peaks that have stats
+const noO2Pct = st => 100 * st.no_o2_summiters / Math.max(1, st.summiters);
+const deathRate = st => 100 * st.deaths / Math.max(1, st.summiters);
+const ordinal = n => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+function rank(p, metric) {
+  const tracked = peaks.filter(q => q.stats);
+  const r = tracked.filter(q => metric(q.stats) > metric(p.stats)).length + 1;
+  if (r === 1) return `highest of ${tracked.length}`;
+  if (r === tracked.length) return `lowest of ${tracked.length}`;
+  return `${ordinal(r)} highest of ${tracked.length}`;
+}
+
+function statsHtml(p) {
+  const st = p.stats;
+  if (!st) return "";
+  const ls = st.last_season;
+  const seasonLine = ls.expeditions
+    ? `<b>${ls.expeditions}</b> expedition${ls.expeditions === 1 ? "" : "s"}, <b>${ls.successful_expeditions}</b> reached the top ·
+       <b>${fmt(ls.summiters)}</b> summit${ls.summiters === 1 ? "" : "s"} · <b>${ls.deaths}</b> death${ls.deaths === 1 ? "" : "s"}`
+    : "No expeditions";
+  return `
+    <div class="d-section">
+      <div class="eyebrow">Latest season · ${esc(ls.season || "")} ${ls.year}</div>
+      <p class="d-season">${seasonLine}</p>
+    </div>
+    <div class="d-section">
+      <div class="eyebrow">All time</div>
+      <div class="d-stats">
+        <div class="d-stat"><div class="v">${fmt(st.summiters)}</div><div class="l">summits</div><div class="r">${rank(p, s => s.summiters)}</div></div>
+        <div class="d-stat"><div class="v">${noO2Pct(st).toFixed(0)}%</div><div class="l">without bottled O₂</div><div class="r">${rank(p, noO2Pct)}</div></div>
+        <div class="d-stat"><div class="v">${deathRate(st).toFixed(1)}</div><div class="l">deaths per 100 summits</div><div class="r">${rank(p, deathRate)}</div></div>
+      </div>
+      <p class="d-season" style="color:var(--muted-col); font-size:.84rem">${fmt(st.deaths)} deaths recorded in total, climbers and staff.</p>
+    </div>`;
+}
+
+// ---------- history chart ----------
+function updateHistory() {
+  const p = peaks[sel], st = p.stats, root = $("#history");
+  root.innerHTML = "";
+  $("#history-title").textContent = `${p.name} · summits per year`;
+  if (!st) {
+    $("#history-note").textContent = "";
+    svg("text", {class: "h-label", x: 500, y: 118, "text-anchor": "middle", style: "font-size:15px"}, root).textContent =
+      "No history yet: this peak is outside the Himalayan Database.";
+    return;
+  }
+  const byYear = new Map(st.by_year.map(([y, s, d]) => [y, {s, d}]));
+  const y0 = st.by_year[0][0], y1 = new Date().getFullYear(), n = y1 - y0 + 1;
+  const X0 = 74, X1 = 992, BASE = 150, TOPY = 18, DMAX_H = 50;
+  const bw = (X1 - X0) / n;
+  const maxS = Math.max(1, ...st.by_year.map(r => r[1])), maxD = Math.max(1, ...st.by_year.map(r => r[2]));
+  const busiest = st.by_year.reduce((a, b) => b[1] > a[1] ? b : a), deadliest = st.by_year.reduce((a, b) => b[2] > a[2] ? b : a);
+  $("#history-note").textContent = `Busiest year ${busiest[0]} (${fmt(busiest[1])} summits)` +
+    (deadliest[2] ? ` · deadliest ${deadliest[0]} (${deadliest[2]} deaths)` : "");
+
+  svg("line", {class: "h-grid", x1: X0, x2: X1, y1: TOPY, y2: TOPY}, root);
+  svg("text", {class: "h-label", x: X0 - 8, y: TOPY + 4, "text-anchor": "end"}, root).textContent = fmt(maxS);
+  svg("text", {class: "h-series", x: X0 - 8, y: BASE - 6, "text-anchor": "end", fill: "#34a865"}, root).textContent = "Summits";
+  svg("text", {class: "h-series", x: X0 - 8, y: BASE + 20, "text-anchor": "end", fill: "#d98a7a"}, root).textContent = "Deaths";
+  svg("text", {class: "h-label", x: X0 - 8, y: BASE + 4 + DMAX_H, "text-anchor": "end"}, root).textContent = maxD;
+
+  const bars = svg("g", {class: reduceMotion ? "" : "h-grow"}, root);
+  for (let y = y0; y <= y1; y++) {
+    const v = byYear.get(y), x = X0 + (y - y0) * bw, w = Math.max(1, bw * .72), delay = `animation-delay:${Math.min(600, (y - y0) * 8)}ms`;
+    if (v?.s) {
+      const h = Math.max(1.5, v.s / maxS * (BASE - TOPY));
+      svg("rect", {class: "h-bar", x, y: BASE - h, width: w, height: h, rx: Math.min(2, w / 2), style: delay}, bars);
+    }
+    if (v?.d) {
+      const h = Math.max(1.5, v.d / maxD * DMAX_H);
+      svg("rect", {class: "h-death", x, y: BASE + 3, width: w, height: h, rx: Math.min(2, w / 2), style: delay}, bars);
+    }
+  }
+  svg("line", {class: "h-axis", x1: X0, x2: X1, y1: BASE + 1.5, y2: BASE + 1.5}, root);
+
+  const first = Math.ceil(y0 / 10) * 10;
+  for (let y = first; y <= y1; y += n > 60 ? 20 : 10) {
+    svg("text", {class: "h-label", x: X0 + (y - y0 + .36) * bw, y: 228, "text-anchor": "middle"}, root).textContent = y;
+  }
+
+  const hits = svg("g", {}, root), tip = $("#htip"), wrap = $("#history-wrap");
+  for (let y = y0; y <= y1; y++) {
+    const r = svg("rect", {class: "h-hit", x: X0 + (y - y0) * bw - 1, y: 4, width: bw + 1, height: BASE + DMAX_H}, hits);
+    r.addEventListener("mousemove", e => {
+      const v = byYear.get(y) || {s: 0, d: 0};
+      tip.innerHTML = `<b>${y}</b><br>${fmt(v.s)} summit${v.s === 1 ? "" : "s"} <span class="m">· ${v.d} death${v.d === 1 ? "" : "s"}</span>`;
+      const box = wrap.getBoundingClientRect();
+      let x = e.clientX - box.left + wrap.scrollLeft + 14;
+      if (x + tip.offsetWidth > wrap.scrollLeft + box.width) x -= tip.offsetWidth + 28;
+      tip.style.left = x + "px";
+      tip.style.top = (e.clientY - box.top - 10) + "px";
+      tip.classList.add("show");
+    });
+    r.addEventListener("mouseleave", () => tip.classList.remove("show"));
+  }
 }
 
 // ---------- stats ----------
@@ -627,6 +773,7 @@ function select(i, updateHash = true) {
   sel = i;
   updateRidge();
   updateDetail();
+  updateHistory();
   updateTimeline();
   updateTable();
   if (updateHash) history.replaceState(null, "", "#" + slug(peaks[i].name));

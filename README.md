@@ -13,6 +13,10 @@ Gasherbrum I/II, Broad Peak and Shishapangma are left empty for now.
   release name in `summits.json` is already current (`--force` overrides).
 - An ascent counts if any route of the expedition was successful and it is not flagged as claimed or
   disputed. The latest `SMTDATE` wins.
+- Per-peak stats come from `members.DBF` (one row per person per expedition): summits and deaths per
+  year, summits without bottled oxygen, and the latest season. "Summits" counts summit events, so a
+  person who summited twice counts twice.
+- For local work, `--tables DIR` reads an already extracted HIMDATA folder instead of downloading.
 - `.github/workflows/update.yml` runs the script monthly and commits `data/` if it changed.
 - `index.html` is a static page for GitHub Pages that renders the JSON as a table.
 

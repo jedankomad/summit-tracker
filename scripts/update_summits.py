@@ -3,7 +3,11 @@
 For each of the 14 eight-thousanders, finds the most recent successful
 summit recorded in the HDB. Peaks outside the HDB's coverage get null.
 
-Usage: python scripts/update_summits.py [--force]
+Also aggregates per-peak stats from the members table: summits and deaths
+per year, summits without supplemental oxygen, and the latest season.
+
+Usage: python scripts/update_summits.py [--force] [--tables DIR]
+  --tables DIR  read already extracted HIMDATA tables instead of downloading
 """
 
 import json
@@ -11,6 +15,7 @@ import re
 import sys
 import tempfile
 import zipfile
+from collections import defaultdict
 from pathlib import Path
 from urllib.parse import quote, urljoin
 from urllib.request import Request, urlopen
@@ -42,7 +47,7 @@ PEAKS = [
 
 SEASONS = {0: None, 1: "Spring", 2: "Summer", 3: "Autumn", 4: "Winter"}
 HOSTS = {1: "Nepal", 2: "China", 3: "India"}
-NEEDED_FILES = {"peaks.dbf", "peaks.fpt", "exped.dbf", "exped.fpt"}
+NEEDED_FILES = {"exped.dbf", "exped.fpt", "members.dbf", "members.fpt"}
 # The site rejects urllib's default User-Agent
 HEADERS = {"User-Agent": "summit-tracker (+https://github.com)"}
 
@@ -92,6 +97,52 @@ def latest_ascents(tables):
     return latest
 
 
+def peak_stats(tables):
+    """Return {PEAKID: stats} aggregated from the exped and members tables."""
+    wanted = {peak[2] for peak in PEAKS if peak[2]}
+    stats = {pid: {
+        "years": defaultdict(lambda: [0, 0]),  # year -> [summiters, deaths]
+        "seasons": defaultdict(lambda: {"expeditions": 0, "successful_expeditions": 0, "summiters": 0, "deaths": 0}),
+        "summiters": 0, "deaths": 0, "no_o2": 0,
+    } for pid in wanted}
+
+    for r in DBF(tables / "exped.dbf", encoding="cp1252", load=False):
+        if r["PEAKID"] not in wanted or not r["YEAR"].strip():
+            continue
+        season = stats[r["PEAKID"]]["seasons"][(int(r["YEAR"]), r["SEASON"])]
+        season["expeditions"] += 1
+        if any(r[f"SUCCESS{i}"] for i in range(1, 5)) and not (r["CLAIMED"] or r["DISPUTED"]):
+            season["successful_expeditions"] += 1
+
+    for r in DBF(tables / "members.dbf", encoding="cp1252", load=False, ignore_missing_memofile=True):
+        if r["PEAKID"] not in wanted or not r["MYEAR"].strip():
+            continue
+        st = stats[r["PEAKID"]]
+        year, season = int(r["MYEAR"]), st["seasons"][(int(r["MYEAR"]), r["MSEASON"])]
+        if r["MSUCCESS"] and not (r["MCLAIMED"] or r["MDISPUTED"]):
+            st["summiters"] += 1
+            st["years"][year][0] += 1
+            season["summiters"] += 1
+            if r["MO2NONE"]:
+                st["no_o2"] += 1
+        if r["DEATH"]:
+            st["deaths"] += 1
+            st["years"][year][1] += 1
+            season["deaths"] += 1
+
+    result = {}
+    for pid, st in stats.items():
+        (year, season_id), last = max(st["seasons"].items())
+        result[pid] = {
+            "summiters": st["summiters"],
+            "deaths": st["deaths"],
+            "no_o2_summiters": st["no_o2"],
+            "by_year": [[y, *v] for y, v in sorted(st["years"].items())],
+            "last_season": {"year": year, "season": SEASONS.get(season_id), **last},
+        }
+    return result
+
+
 def to_ascent(r):
     route = next(r[f"ROUTE{i}"] for i in range(1, 5) if r[f"SUCCESS{i}"])
     return {
@@ -110,10 +161,11 @@ def to_ascent(r):
 
 def main():
     force = "--force" in sys.argv
+    local = Path(sys.argv[sys.argv.index("--tables") + 1]) if "--tables" in sys.argv else None
     release, url = find_release()
     print(f"Current HDB release: {release}")
 
-    if OUTPUT.exists() and not force:
+    if OUTPUT.exists() and not force and not local:
         current = json.loads(OUTPUT.read_text(encoding="utf-8"))
         if current.get("sources", {}).get("hdb", {}).get("release") == release:
             print("Already up to date, nothing to do.")
@@ -121,9 +173,15 @@ def main():
 
     with tempfile.TemporaryDirectory() as tmp:
         tables = Path(tmp)
-        print(f"Downloading {url}")
-        download_tables(url, tables)
+        if local:
+            for f in local.iterdir():
+                if f.name.lower() in NEEDED_FILES:
+                    (tables / f.name.lower()).write_bytes(f.read_bytes())
+        else:
+            print(f"Downloading {url}")
+            download_tables(url, tables)
         latest = latest_ascents(tables)
+        stats = peak_stats(tables)
 
     data = {
         "sources": {"hdb": {"release": release, "url": url}},
@@ -136,6 +194,7 @@ def main():
                 "countries": countries,
                 "first_ascent_year": first,
                 "last_ascent": to_ascent(latest[pid]) if pid in latest else None,
+                "stats": stats.get(pid),
             }
             for name, height, pid, mrange, countries, first in PEAKS
         ],
